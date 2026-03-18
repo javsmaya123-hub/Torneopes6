@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>PES 6 Liga PRO</title>
+
+<style>
+body{font-family:Arial;background:#0b0b0b;color:#fff;text-align:center}
+img.logo{width:25px;vertical-align:middle}
+table{margin:20px auto;border-collapse:collapse;width:95%;background:#1a1a1a}
+th,td{border:1px solid #444;padding:6px}
+th{background:#333}
+.section{margin-top:25px}
+input,button,select{padding:6px;margin:4px}
+.yellow{color:yellow}
+.red{color:red}
+.reset{position:absolute;top:10px;right:10px;background:red;color:white;border:none;cursor:pointer;}
+button{cursor:pointer}
+</style>
+</head>
+
+<body>
+
+<button class="reset" onclick="resetTorneo()">Reiniciar Torneo</button>
+
+<img src="pes6.png" style="width:60%;max-width:600px">
+
+<h2>Equipos</h2>
+<div>
+<button onclick="selectTeam('Zaragoza')"><img src="zaragoza.png" class="logo"> Zaragoza</button>
+<button onclick="selectTeam('Lyon')"><img src="lyon.png" class="logo"> Lyon</button>
+<button onclick="selectTeam('Tottenham')"><img src="tottenham.png" class="logo"> Tottenham</button>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Escudo</th><th>Equipo</th><th>Pts</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th>
+</tr>
+</thead>
+<tbody id="table"></tbody>
+</table>
+
+<div class="section">
+<h2>📅 Cargar Partido</h2>
+
+<select id="fecha">
+<option value="">Seleccionar fecha</option>
+<script>
+for(let i=1;i<=38;i++){
+document.write(`<option value="Fecha ${i}">Fecha ${i}</option>`);
+}
+</script>
+</select><br>
+
+<input id="team1" placeholder="Equipo 1">
+<input id="goals1" type="number" placeholder="Goles"><br>
+
+<b>Goleadores Equipo 1</b><br>
+<input id="s1_1"><input id="g1_1" type="number"><br>
+<input id="s1_2"><input id="g1_2" type="number"><br>
+<input id="s1_3"><input id="g1_3" type="number"><br>
+<input id="s1_4"><input id="g1_4" type="number"><br>
+
+<b>Asistencias</b><br>
+<input id="a1_1"><input id="a1n_1" type="number"><br>
+<input id="a1_2"><input id="a1n_2" type="number"><br>
+<input id="a1_3"><input id="a1n_3" type="number"><br>
+
+<b class="yellow">🟨 Amarillas</b><br>
+<input id="y1_1"><input id="y1n_1" type="number"><br>
+<input id="y1_2"><input id="y1n_2" type="number"><br>
+<input id="y1_3"><input id="y1n_3" type="number"><br>
+<input id="y1_4"><input id="y1n_4" type="number"><br>
+
+<b class="red">🟥 Rojas</b><br>
+<input id="r1_1"><input id="r1n_1" type="number"><br>
+<input id="r1_2"><input id="r1n_2" type="number"><br>
+<input id="r1_3"><input id="r1n_3" type="number"><br>
+<input id="r1_4"><input id="r1n_4" type="number"><br>
+
+<br>
+
+<input id="team2" placeholder="Equipo 2">
+<input id="goals2" type="number" placeholder="Goles"><br>
+
+<b>Goleadores Equipo 2</b><br>
+<input id="s2_1"><input id="g2_1" type="number"><br>
+<input id="s2_2"><input id="g2_2" type="number"><br>
+<input id="s2_3"><input id="g2_3" type="number"><br>
+<input id="s2_4"><input id="g2_4" type="number"><br>
+
+<b>Asistencias</b><br>
+<input id="a2_1"><input id="a2n_1" type="number"><br>
+<input id="a2_2"><input id="a2n_2" type="number"><br>
+<input id="a2_3"><input id="a2n_3" type="number"><br>
+
+<b class="yellow">🟨 Amarillas</b><br>
+<input id="y2_1"><input id="y2n_1" type="number"><br>
+<input id="y2_2"><input id="y2n_2" type="number"><br>
+<input id="y2_3"><input id="y2n_3" type="number"><br>
+<input id="y2_4"><input id="y2n_4" type="number"><br>
+
+<b class="red">🟥 Rojas</b><br>
+<input id="r2_1"><input id="r2n_1" type="number"><br>
+<input id="r2_2"><input id="r2n_2" type="number"><br>
+<input id="r2_3"><input id="r2n_3" type="number"><br>
+<input id="r2_4"><input id="r2n_4" type="number"><br>
+
+<br>
+
+<input id="mvp" placeholder="MVP del partido"><br>
+<button onclick="addMatch()">Guardar</button>
+</div>
+
+<div class="section"><h2>🥇 Goleadores</h2><table><tbody id="scorers"></tbody></table></div>
+<div class="section"><h2>🎯 Asistencias</h2><table><tbody id="assists"></tbody></table></div>
+<div class="section"><h2 class="yellow">🟨 Amarillas</h2><table><tbody id="yellows"></tbody></table></div>
+<div class="section"><h2 class="red">🟥 Rojas</h2><table><tbody id="reds"></tbody></table></div>
+<div class="section"><h2>🏆 MVPs</h2><table><tbody id="mvps"></tbody></table></div>
+
+<div class="section">
+<h2>📰 Noticias</h2>
+<div id="news"></div>
+</div>
+
+<script>
+// LOCAL STORAGE
+let data = JSON.parse(localStorage.getItem("torneo")) || {
+teams:[], scorers:{}, assists:{}, yellows:{}, reds:{}, mvps:{}, noticias:[]
+};
+
+let teams=data.teams;
+let scorers=data.scorers;
+let assists=data.assists;
+let yellows=data.yellows;
+let reds=data.reds;
+let mvps=data.mvps;
+let noticias=data.noticias;
+
+function save(){
+localStorage.setItem("torneo", JSON.stringify(data));
+}
+
+const logos={
+"Zaragoza":"zaragoza.png",
+"Lyon":"lyon.png",
+"Tottenham":"tottenham.png"
+};
+
+function selectTeam(name){
+if(!teams.find(t=>t.name===name)){
+teams.push({name,pts:0,g:0,e:0,p:0,gf:0,gc:0});
+save();
+renderTable();
+}
+}
+
+function renderTable(){
+let table=document.getElementById("table");
+table.innerHTML="";
+teams.forEach(t=>{
+table.innerHTML+=`
+<tr>
+<td><img src="${logos[t.name]}" class="logo"></td>
+<td>${t.name}</td>
+<td>${t.pts}</td>
+<td>${t.g}</td>
+<td>${t.e}</td>
+<td>${t.p}</td>
+<td>${t.gf}</td>
+<td>${t.gc}</td>
+<td>${t.gf-t.gc}</td>
+</tr>`;
+});
+}
+
+function sumar(obj,nombre,cant){
+if(nombre && cant){
+obj[nombre]=(obj[nombre]||0)+(+cant);
+}
+}
+
+function addMatch(){
+let fecha=document.getElementById("fecha").value;
+let numFecha=parseInt(fecha.replace("Fecha ",""));
+let siguiente=numFecha+1;
+
+let t1=team1.value;
+let t2=team2.value;
+let g1=+goals1.value||0;
+let g2=+goals2.value||0;
+
+let team1Obj=teams.find(t=>t.name===t1);
+let team2Obj=teams.find(t=>t.name===t2);
+
+if(team1Obj && team2Obj){
+team1Obj.gf+=g1;
+team1Obj.gc+=g2;
+team2Obj.gf+=g2;
+team2Obj.gc+=g1;
+
+if(g1>g2){team1Obj.pts+=3;team1Obj.g++;team2Obj.p++;}
+else if(g2>g1){team2Obj.pts+=3;team2Obj.g++;team1Obj.p++;}
+else{team1Obj.pts++;team2Obj.pts++;team1Obj.e++;team2Obj.e++;}
+}
+
+for(let i=1;i<=4;i++){
+sumar(scorers,document.getElementById("s1_"+i).value+" ("+t1+")",document.getElementById("g1_"+i).value);
+sumar(scorers,document.getElementById("s2_"+i).value+" ("+t2+")",document.getElementById("g2_"+i).value);
+}
+
+for(let i=1;i<=3;i++){
+sumar(assists,document.getElementById("a1_"+i).value+" ("+t1+")",document.getElementById("a1n_"+i).value);
+sumar(assists,document.getElementById("a2_"+i).value+" ("+t2+")",document.getElementById("a2n_"+i).value);
+}
+
+for(let i=1;i<=4;i++){
+let n1=document.getElementById("y1_"+i).value;
+let y1=+document.getElementById("y1n_"+i).value||0;
+sumar(yellows,n1+" ("+t1+")",y1);
+if(n1 && y1>=2){
+noticias.push(`🟨 ${n1} (${t1}) recibió 2 amarillas en Fecha ${numFecha} y NO juega Fecha ${siguiente}`);
+}
+
+let r1=document.getElementById("r1_"+i).value;
+let rn1=+document.getElementById("r1n_"+i).value||0;
+sumar(reds,r1+" ("+t1+")",rn1);
+if(r1 && rn1>=1){
+noticias.push(`🟥 ${r1} (${t1}) fue expulsado en Fecha ${numFecha} y NO juega Fecha ${siguiente}`);
+}
+
+let n2=document.getElementById("y2_"+i).value;
+let y2=+document.getElementById("y2n_"+i).value||0;
+sumar(yellows,n2+" ("+t2+")",y2);
+if(n2 && y2>=2){
+noticias.push(`🟨 ${n2} (${t2}) recibió 2 amarillas en Fecha ${numFecha} y NO juega Fecha ${siguiente}`);
+}
+
+let r2=document.getElementById("r2_"+i).value;
+let rn2=+document.getElementById("r2n_"+i).value||0;
+sumar(reds,r2+" ("+t2+")",rn2);
+if(r2 && rn2>=1){
+noticias.push(`🟥 ${r2} (${t2}) fue expulsado en Fecha ${numFecha} y NO juega Fecha ${siguiente}`);
+}
+}
+
+let m=document.getElementById("mvp").value;
+if(m) mvps[m]=(mvps[m]||0)+1;
+
+save();
+renderAll();
+renderTable();
+}
+
+// 🔥 RENDER CON ❌
+function render(obj,id){
+let el=document.getElementById(id);
+el.innerHTML="";
+
+Object.entries(obj).sort((a,b)=>b[1]-a[1]).forEach((e,i)=>{
+
+let boton="";
+if(id==="yellows"||id==="reds"){
+boton=`<button onclick="eliminarJugador('${e[0]}','${id}')">❌</button>`;
+}
+
+el.innerHTML+=`
+<tr>
+<td>${i+1}</td>
+<td>${e[0]}</td>
+<td>${e[1]}</td>
+<td>${boton}</td>
+</tr>`;
+});
+}
+
+function eliminarJugador(nombre,tipo){
+if(tipo==="yellows") delete yellows[nombre];
+if(tipo==="reds") delete reds[nombre];
+
+save();
+renderAll();
+}
+
+function renderAll(){
+render(scorers,"scorers");
+render(assists,"assists");
+render(yellows,"yellows");
+render(reds,"reds");
+render(mvps,"mvps");
+
+let n=document.getElementById("news");
+n.innerHTML="";
+noticias.slice().reverse().forEach(x=>n.innerHTML+=`<p>${x}</p>`);
+}
+
+function resetTorneo(){
+if(confirm("¿Seguro que querés borrar todo?")){
+localStorage.clear();
+location.reload();
+}
+}
+
+renderTable();
+renderAll();
+</script>
+
+</body>
+</html>
